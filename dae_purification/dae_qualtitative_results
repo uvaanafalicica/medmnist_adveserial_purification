@@ -1,0 +1,135 @@
+"""
+Defensive Shield Pipeline Phase 3 - Cell 7: Advanced Qualitative Image Matrix Generator
+Author: Senior AI Systems Research Engineer
+Production Status: Active | Generates Complete Clean vs Attacked vs DAE Purified Comparison Grids
+"""
+
+import os
+import torch
+import torch.nn as nn
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Ensure definitions remain matched to avoid memory translation artifacts
+class MedicalDAEShield(nn.Module):
+    def __init__(self):
+        super(MedicalDAEShield, self).__init__()
+        self.encoder = nn.Sequential(
+            nn.Conv2d(1, 32, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True)
+        )
+        self.decoder = nn.Sequential(
+            nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(32, 1, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.Sigmoid()
+        )
+    def forward(self, x):
+        return self.decoder(self.encoder(x))
+
+def generate_qualitative_manuscript_grids(base_directory):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    dae_weight_path = os.path.join(base_directory, "best_dae_purifier_shield.pth")
+
+    if not os.path.exists(dae_weight_path):
+        print(f" Visualizer Error: Pre-trained DAE Weights missing at -> {dae_weight_path}")
+        return
+
+    dae_shield = MedicalDAEShield().to(device)
+    dae_shield.load_state_dict(torch.load(dae_weight_path, map_location=device))
+    dae_shield.eval()
+
+    target_tasks = ["pneumonia", "organ", "chest"]
+    epsilon_matrix = [1/255, 4/255, 8/255]
+    attack_names = ["fgsm", "pgd", "mifgsm"]
+
+    print("\n" + "="*95)
+    print("       INITIATING ADVANCED QUALITATIVE VISUAL CORRELATION COMPREHENSIVE PIPELINE      ")
+    print("="*95)
+
+    # Establish unified academic theme
+    sns.set_theme(style="white")
+
+    for task in target_tasks:
+        tensor_file = os.path.join(base_directory, f"compromised_{task}_tensors.pt")
+        if not os.path.exists(tensor_file):
+            print(f"  Scope Skip: Target storage block missing for task key [{task.upper()}]")
+            continue
+
+        print(f"📡 Extracting Visual Sub-arrays for Modality Layer -> [{task.upper()}MNIST]")
+        data_manifest = torch.load(tensor_file, map_location=device)
+
+        # Pick sample index 0 from the batch arrays
+        clean_img_tensor = data_manifest["clean"][0:1].to(device)
+        if clean_img_tensor.max() > 1.0:
+            clean_img_tensor = clean_img_tensor / 255.0
+
+        clean_np = clean_img_tensor.squeeze().cpu().numpy()
+
+        for attack in attack_names:
+            for eps in epsilon_matrix:
+                eps_scaled = eps * 255
+
+                # Fetch target specific attacked vector
+                attacked_tensor = data_manifest[attack][eps][0:1].to(device)
+                if attacked_tensor.max() > 1.0:
+                    attacked_tensor = attacked_tensor / 255.0
+
+                attacked_np = attacked_tensor.squeeze().cpu().numpy()
+
+                # Compute absolute amplified residual mismatch signature
+                # Multiplying difference makes micro adversarial changes perfectly clear to reviewers
+                residual_noise = np.abs(attacked_np - clean_np)
+                if residual_noise.max() > 0:
+                    residual_noise = residual_noise / residual_noise.max()
+
+                # Pass through pre-trained DAE filter layer natively at 28x28 grayscale
+                with torch.no_grad():
+                    purified_tensor = dae_shield(attacked_tensor)
+                purified_np = purified_tensor.squeeze().cpu().numpy()
+
+                # Build publication grid framework with 4 target column panels
+                fig, axes = plt.subplots(1, 4, figsize=(11, 3.2), dpi=300)
+
+                # Column 1: Source Pristine Ground Truth Array
+                axes[0].imshow(clean_np, cmap='gray', vmin=0, vmax=1)
+                axes[0].set_title("A. Clean Image", fontsize=10, weight='bold')
+                axes[0].axis('off')
+
+                # Column 2: Corrupted Adversarial Target Matrix
+                axes[1].imshow(attacked_np, cmap='gray', vmin=0, vmax=1)
+                axes[1].set_title(f"B. Attacked ({attack.upper()} $\epsilon$={eps_scaled:.1f})", fontsize=10, weight='bold')
+                axes[1].axis('off')
+
+                # Column 3: Amplified Residual Perturbation Topography Map
+                axes[2].imshow(residual_noise, cmap='hot')
+                axes[2].set_title("C. Residual Noise Map", fontsize=10, weight='bold')
+                axes[2].axis('off')
+
+                # Column 4: Purified Output Reconstruction Plate
+                axes[3].imshow(purified_np, cmap='gray', vmin=0, vmax=1)
+                axes[3].set_title("D. DAE Purified Result", fontsize=10, weight='bold')
+                axes[3].axis('off')
+
+                plt.tight_layout()
+
+                # Formulate safe platform string names for export
+                save_filename = f"qualitative_{task}_{attack.lower()}_eps_{int(eps_scaled)}.png"
+                save_path = os.path.join(base_directory, save_filename)
+                plt.savefig(save_path, bbox_inches='tight', dpi=300)
+                plt.close()
+
+        del data_manifest
+        torch.cuda.empty_cache()
+
+    print("\n [QUALITATIVE SUCCESS]: All high-DPI scientific visualization figures generated.")
+
+if __name__ == "__main__":
+    PROJECT_DIR = "/content/drive/MyDrive/Medical_Project_Data/Checkpoints"
+    generate_qualitative_manuscript_grids(base_directory=PROJECT_DIR)
