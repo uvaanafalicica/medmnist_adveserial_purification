@@ -1,9 +1,3 @@
-"""
-Phase 2 Evaluation - Result 2: Qualitative Image Grid Plot Engine
-Visual Columns: [Clean Ground-Truth] | [Noisy Input] | [DAE Purified Output] | [Extracted Noise Residual]
-Production Status: GitHub Ready | Manuscript High-Res Figure Designer
-"""
-
 import os
 import torch
 import numpy as np
@@ -16,9 +10,11 @@ def generate_qualitative_grid(pipeline_loaders, checkpoint_path, save_dir, noise
     dae_model.eval()
 
     datasets = ["pneumonia", "organ", "chest"]
-    fig, axes = plt.subplots(3, 4, figsize=(12, 9))
 
-    print(" Constructing high-resolution visual confirmation grid matrices...")
+    # Core grid layout: 3 Tasks (rows) x 3 Core Visuals (columns)
+    fig, axes = plt.subplots(3, 3, figsize=(9, 9))
+
+    print(" Constructing streamlined 3-column qualitative visualization matrices...")
 
     with torch.no_grad():
         for idx, task in enumerate(datasets):
@@ -29,39 +25,45 @@ def generate_qualitative_grid(pipeline_loaders, checkpoint_path, save_dir, noise
             noise = torch.randn_like(images) * noise_factor
             noisy_images = torch.clamp(images + noise, 0.0, 1.0)
             purified = dae_model(noisy_images)
-            residual_noise = torch.abs(noisy_images - purified)
 
             # Extract single operational slice tensors safely for plotting
             orig_img = images[0].cpu().squeeze().numpy()
             nois_img = noisy_images[0].cpu().squeeze().numpy()
             pure_img = purified[0].cpu().squeeze().numpy()
-            resi_img = residual_noise[0].cpu().squeeze().numpy()
 
-            # Plot Row Configurations strictly aligned via standard domains
-            axes[idx, 0].imshow(orig_img, cmap='gray')
+            # Handle shape transposition if data contains channel dimension at axis 0
+            if orig_img.ndim == 3 and (orig_img.shape[0] == 1 or orig_img.shape[0] == 3):
+                orig_img = np.transpose(orig_img, (1, 2, 0))
+                nois_img = np.transpose(nois_img, (1, 2, 0))
+                pure_img = np.transpose(pure_img, (1, 2, 0))
+
+            # Squeeze single-channel footprints down to clean 2D arrays for matplotlib gray mapping
+            orig_plot = orig_img.squeeze(-1) if (orig_img.ndim == 3 and orig_img.shape[-1] == 1) else orig_img
+            nois_plot = nois_img.squeeze(-1) if (nois_img.ndim == 3 and nois_img.shape[-1] == 1) else nois_img
+            pure_plot = pure_img.squeeze(-1) if (pure_img.ndim == 3 and pure_img.shape[-1] == 1) else pure_img
+
+            # Column 0: Clean Ground-Truth
+            axes[idx, 0].imshow(orig_plot, cmap='gray')
             axes[idx, 0].set_ylabel(f"{task.upper()}MNIST", fontsize=12, fontweight='bold')
             if idx == 0: axes[idx, 0].set_title("Clean Ground-Truth", fontsize=11, fontweight='bold')
             axes[idx, 0].set_xticks([]); axes[idx, 0].set_yticks([])
 
-            axes[idx, 1].imshow(nois_img, cmap='gray')
-            if idx == 0: axes[idx, 1].set_title("Noisy Input (σ=0.1)", fontsize=11, fontweight='bold')
+            # Column 1: Noisy Input
+            axes[idx, 1].imshow(nois_plot, cmap='gray')
+            if idx == 0: axes[idx, 1].set_title(f"Noisy Input (σ={noise_factor})", fontsize=11, fontweight='bold')
             axes[idx, 1].set_xticks([]); axes[idx, 1].set_yticks([])
 
-            axes[idx, 2].imshow(pure_img, cmap='gray')
+            # Column 2: DAE Purified Output
+            axes[idx, 2].imshow(pure_plot, cmap='gray')
             if idx == 0: axes[idx, 2].set_title("DAE Purified Output", fontsize=11, fontweight='bold')
             axes[idx, 2].set_xticks([]); axes[idx, 2].set_yticks([])
 
-            # Map residual noise maps onto a warm spectrum to grab reviewer attention instantly
-            axes[idx, 3].imshow(resi_img, cmap='hot')
-            if idx == 0: axes[idx, 3].set_title("Extracted Noise Residual", fontsize=11, fontweight='bold')
-            axes[idx, 3].set_xticks([]); axes[idx, 3].set_yticks([])
-
     plt.tight_layout()
     os.makedirs(save_dir, exist_ok=True)
-    grid_path = os.path.join(save_dir, "dae_phase2_purification_grid.png")
+    grid_path = os.path.join(save_dir, "dae_phase2_clean_purification_grid.png")
     plt.savefig(grid_path, dpi=300, bbox_inches='tight')
     plt.show()
-    print(f" SUCCESS: Manuscript Qualitative Proof Grid locked in Drive at: {grid_path}")
+    print(f" SUCCESS: Manuscript 3-Column Visual Proof Grid locked in Drive at: {grid_path}")
 
 if __name__ == "__main__":
     CHECKPOINT = "/content/drive/MyDrive/Medical_Project_Data/Checkpoints/best_dae_purifier_shield.pth"
