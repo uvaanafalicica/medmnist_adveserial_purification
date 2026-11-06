@@ -52,7 +52,37 @@ The proposed framework includes:
 
 ## Repository Structure
 
-The source code is organized into preprocessing, classifier training, adversarial attacks, denoising autoencoder, purification, and evaluation modules.
+medmnist_adveserial_purification/
+│
+├── data_preprocessing/                 # Dataset preparation and preprocessing
+│   ├── class_imbalance_check.py
+│   ├── dataset_loader.py
+│   └── preprocessing.py
+│
+├── classifier/                         # ResNet-18 classifier implementation
+│   ├── Classification_ResNet-18_Training.py
+│   ├── Evaluation.py
+│   ├── ResNet-18_Training_chest.py
+│   └── ResNet-18_training_pneu_organ.py
+│
+├── dae_training/                       # DAE model training
+│   ├── dae_test_qualitative_analysis
+│   ├── dae_training.py
+│   └── dataloader.py
+│
+├── Adveserial_Attack/                  # Adversarial attack generation
+│   ├── Adversarial_Attack.py
+│   └── Data_loader.py
+│
+├── dae_purification/                   # DAE-based image purification
+│   ├── DAE_RestNet_DataLoader.py
+│   ├── dae_qualitative_results
+│   ├── dae_resnet_purification.py
+│   └── ssim_mse_loss.py
+│
+├── results/                            # Experimental results
+│
+├── README.md                           # Project documentation
 
 ## Reproducibility
 
